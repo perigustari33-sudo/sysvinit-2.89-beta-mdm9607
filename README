@@ -1,0 +1,12 @@
+
+contrib		Unofficial stuff, add-on programs
+doc		Documentation
+man		Manual pages
+src		Source code
+
+For instructions on building and installing SysV init, please
+see the "doc/Install" file.
+
+The project home is on https://savannah.nongnu.org/projects/sysvinit 
+
+Send patches to sysvinit-devel@nongnu.org .
