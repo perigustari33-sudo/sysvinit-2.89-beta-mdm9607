@@ -16,13 +16,20 @@ jobs:
     - name: Install ARM cross-compilation tools
       run: |
         sudo apt-get update
-        sudo apt-get install musl-tools musl-dev:armhf
+        # Crossbuild-essential akan menginstal toolchain dan semua pustaka dasar
+        sudo apt-get install -y crossbuild-essential-armel
+        # Kompiler tambahan jika diperlukan
+        sudo apt-get install -y gcc-arm-linux-gnueabi
+
     - name: Compile Sysvinit statically for ARM with soft-float
       run: |
         cd src
         # -mfloat-abi=soft: soft-float ABI
         # -static: link statis
-        make -e CC=arm-linux-musleabi-gcc LDFLAGS="-static"
+        make -e CC=arm-linux-gnueabi-gcc \
+             CFLAGS="-mfloat-abi=soft" \
+             LDFLAGS="-static -mfloat-abi=soft"
+
     - name: Upload binaries as artifacts
       uses: actions/upload-artifact@v4
       with:
