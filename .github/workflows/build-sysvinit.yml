@@ -1,4 +1,4 @@
-name: Build Statically Linked Sysvinit for ARM (Soft-Float)
+name: Build Sysvinit for ARM with Fallback
 
 on:
   push:
@@ -13,27 +13,38 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install ARM cross-compilation tools
+    - name: Install ARM toolchain with multiple fallbacks
       run: |
         sudo apt-get update
         sudo apt-get install -y crossbuild-essential-armel
+        
+        # Coba berbagai metode instalasi libcrypt
+        echo "Attempting to install libcrypt for ARM..."
+        
+        # Metode 1: Paket khusus armel
+        if sudo apt-get install -y libcrypt-dev-armel-cross; then
+          echo "Installed libcrypt-dev-armel-cross"
+        # Metode 2: Paket multiarch
+        elif sudo apt-get install -y libcrypt-dev:armel; then
+          echo "Installed libcrypt-dev:armel"
+        # Metode 3: Paket dari repositori
+        elif sudo apt-get install -y libcrypt-dev-armel; then
+          echo "Installed libcrypt-dev-armel"
+        else
+          echo "WARNING: libcrypt not found, will build without crypt support"
+          # Modifikasi Makefile jika libcrypt tidak tersedia
+          cd src
+          sed -i 's/-lcrypt//g' Makefile
+        fi
 
-    - name: Modify Makefile to remove -lcrypt
-      run: |
-        cd src
-        # Backup Makefile
-        cp Makefile Makefile.bak
-        # Hapus -lcrypt dari link sulogin
-        sed -i 's/-lcrypt//g' Makefile
-
-    - name: Compile Sysvinit statically for ARM with soft-float
+    - name: Compile Sysvinit statically
       run: |
         cd src
         make -e CC=arm-linux-gnueabi-gcc \
              CFLAGS="-mfloat-abi=soft" \
              LDFLAGS="-static -mfloat-abi=soft"
 
-    - name: Upload binaries as artifacts
+    - name: Upload binaries
       uses: actions/upload-artifact@v4
       with:
         name: sysvinit-static-arm-softfloat
