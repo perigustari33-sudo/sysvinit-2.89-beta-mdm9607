@@ -1,4 +1,4 @@
-name: Build Sysvinit for ARM with Fallback
+name: Build Statically Linked Sysvinit for ARM (Soft-Float) - Without sulogin
 
 on:
   push:
@@ -13,38 +13,44 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install ARM toolchain with multiple fallbacks
+    - name: Install ARM cross-compilation tools
       run: |
         sudo apt-get update
         sudo apt-get install -y crossbuild-essential-armel
-        
-        # Coba berbagai metode instalasi libcrypt
-        echo "Attempting to install libcrypt for ARM..."
-        
-        # Metode 1: Paket khusus armel
-        if sudo apt-get install -y libcrypt-dev-armel-cross; then
-          echo "Installed libcrypt-dev-armel-cross"
-        # Metode 2: Paket multiarch
-        elif sudo apt-get install -y libcrypt-dev:armel; then
-          echo "Installed libcrypt-dev:armel"
-        # Metode 3: Paket dari repositori
-        elif sudo apt-get install -y libcrypt-dev-armel; then
-          echo "Installed libcrypt-dev-armel"
-        else
-          echo "WARNING: libcrypt not found, will build without crypt support"
-          # Modifikasi Makefile jika libcrypt tidak tersedia
-          cd src
-          sed -i 's/-lcrypt//g' Makefile
-        fi
 
-    - name: Compile Sysvinit statically
+    - name: Remove sulogin from Makefile
+      run: |
+        cd src
+        # Backup Makefile
+        cp Makefile Makefile.bak
+        
+        # Hapus sulogin dari SBIN di bagian DISTRO kosong
+        sed -i '/^ifeq ($(DISTRO),)$/,/^endif/ s/SBIN	+= sulogin bootlogd/SBIN	+= bootlogd/' Makefile
+        sed -i '/^ifeq ($(DISTRO),)$/,/^endif/ s/MAN8	+= sulogin.8 bootlogd.8/MAN8	+= bootlogd.8/' Makefile
+        
+        # Hapus sulogin dari SBIN di bagian Debian
+        sed -i '/^ifeq ($(DISTRO),Debian)$/,/^endif/ s/SBIN	+= sulogin bootlogd/SBIN	+= bootlogd/' Makefile
+        sed -i '/^ifeq ($(DISTRO),Debian)$/,/^endif/ s/MAN8	+= sulogin.8 bootlogd.8/MAN8	+= bootlogd.8/' Makefile
+        
+        # Hapus sulogin dari SBIN di bagian SuSE
+        sed -i '/^ifeq ($(DISTRO),SuSE)$/,/^endif/ s/SBIN	+= sulogin/SBIN	+=/' Makefile
+        sed -i '/^ifeq ($(DISTRO),SuSE)$/,/^endif/ s/MAN8	+= sulogin.8/MAN8	+=/' Makefile
+        
+        # Hapus target sulogin dari Makefile (opsional)
+        sed -i '/^sulogin:/,/^$/d' Makefile
+        sed -i '/^sulogin.o:/,/^$/d' Makefile
+        
+        # Hapus aturan untuk sulogin
+        sed -i '/SULOGINLIBS/d' Makefile
+
+    - name: Compile Sysvinit statically for ARM with soft-float
       run: |
         cd src
         make -e CC=arm-linux-gnueabi-gcc \
              CFLAGS="-mfloat-abi=soft" \
              LDFLAGS="-static -mfloat-abi=soft"
 
-    - name: Upload binaries
+    - name: Upload binaries as artifacts
       uses: actions/upload-artifact@v4
       with:
         name: sysvinit-static-arm-softfloat
@@ -55,4 +61,3 @@ jobs:
           src/runlevel
           src/killall5
           src/fstab-decode
-          src/sulogin
