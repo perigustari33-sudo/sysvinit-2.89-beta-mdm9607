@@ -1030,23 +1030,7 @@ pid_t spawn(CHILD *ch, int *res)
 	}
 
 	/* Do we try to respawn too fast? */
-	if (ch->count >= MAXSPAWN) {
 
-	  initlog(L_VB,
-		"Id \"%s\" respawning too fast: disabled for %d minutes",
-		ch->id, SLEEPTIME / 60);
-	  ch->flags &= ~RUNNING;
-	  ch->flags |= FAILING;
-
-	  /* Remember the time we stopped */
-	  ch->tm = t;
-
-	  /* Try again in 5 minutes */
-	  oldAlarm = alarm(0);
-	  if (oldAlarm > SLEEPTIME || oldAlarm <= 0) oldAlarm = SLEEPTIME;
-	  alarm(oldAlarm);
-	  return(-1);
-	}
   }
 
   /* See if there is an "initscript" (except in single user mode). */
