@@ -16,12 +16,15 @@ jobs:
     - name: Install ARM cross-compilation tools
       run: |
         sudo apt-get update
-        # Install toolchain dasar
         sudo apt-get install -y crossbuild-essential-armel
-        # Install libcrypt untuk ARM (versi statis)
-        sudo apt-get install -y libcrypt-dev:armel
-        # Alternatif jika paket di atas tidak ditemukan
-        sudo apt-get install -y libcrypt-dev-armel-cross || true
+
+    - name: Modify Makefile to remove -lcrypt
+      run: |
+        cd src
+        # Backup Makefile
+        cp Makefile Makefile.bak
+        # Hapus -lcrypt dari link sulogin
+        sed -i 's/-lcrypt//g' Makefile
 
     - name: Compile Sysvinit statically for ARM with soft-float
       run: |
