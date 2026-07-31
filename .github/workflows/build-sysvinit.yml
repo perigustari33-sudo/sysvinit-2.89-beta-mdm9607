@@ -1,4 +1,4 @@
-name: Build Statically Linked Sysvinit for ARM (Soft-Float) - Without sulogin
+name: Build Statically Linked Sysvinit for ARMv7-a (Soft-Float) - Without sulogin
 
 on:
   push:
@@ -43,17 +43,17 @@ jobs:
         # Hapus aturan untuk sulogin
         sed -i '/SULOGINLIBS/d' Makefile
 
-    - name: Compile Sysvinit statically for ARM with soft-float
+    - name: Compile Sysvinit statically for ARMv7-a with soft-float
       run: |
         cd src
         make -e CC=arm-linux-gnueabi-gcc \
-             CFLAGS="-mfloat-abi=soft" \
-             LDFLAGS="-static -mfloat-abi=soft"
+             CFLAGS="-march=armv7-a -mfloat-abi=soft" \
+             LDFLAGS="-static -march=armv7-a -mfloat-abi=soft"
 
     - name: Upload binaries as artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: sysvinit-static-arm-softfloat
+        name: sysvinit-static-armv7-a-softfloat
         path: |
           src/init
           src/halt
