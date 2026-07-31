@@ -1,0 +1,35 @@
+name: Build Statically Linked Sysvinit (Cross-Platform)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Definisikan target arsitektur dan kompiler silang
+        target: [arm-linux-gnueabi] # Contoh target
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install cross-compilation tools
+      run: |
+        sudo apt-get update
+        # Install toolchain untuk target yang diperlukan
+        sudo apt-get install -y gcc-${{ matrix.target }} make
+
+    - name: Compile Sysvinit statically for ${{ matrix.target }}
+      run: |
+        cd src
+        # Tentukan kompiler dan flag yang sesuai
+        make -e CC=${{ matrix.target }}-gcc LDFLAGS="-static"
+
+    - name: Upload binaries for ${{ matrix.target }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: sysvinit-static-${{ matrix.target }}
+        path: src/init
