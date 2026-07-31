@@ -1,4 +1,4 @@
-name: Build Statically Linked Sysvinit for ARM
+name: Build Statically Linked Sysvinit for ARM (Soft-Float)
 
 on:
   push:
@@ -13,25 +13,27 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install cross-compilation tools and static libraries
+    - name: Install ARM cross-compilation tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          gcc-arm-linux-gnueabi \
-          binutils-arm-linux-gnueabi \
-          libc6-dev-armel-cross \
-          libcrypt-dev-armel-cross \
-          make
+        # Crossbuild-essential akan menginstal toolchain dan semua pustaka dasar
+        sudo apt-get install -y crossbuild-essential-armel
+        # Kompiler tambahan jika diperlukan
+        sudo apt-get install -y gcc-arm-linux-gnueabi
 
-    - name: Compile Sysvinit statically for ARM
+    - name: Compile Sysvinit statically for ARM with soft-float
       run: |
         cd src
-        make -e CC=arm-linux-gnueabi-gcc LDFLAGS="-static"
+        # -mfloat-abi=soft: soft-float ABI
+        # -static: link statis
+        make -e CC=arm-linux-gnueabi-gcc \
+             CFLAGS="-mfloat-abi=soft" \
+             LDFLAGS="-static -mfloat-abi=soft"
 
     - name: Upload binaries as artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: sysvinit-static-arm
+        name: sysvinit-static-arm-softfloat
         path: |
           src/init
           src/halt
