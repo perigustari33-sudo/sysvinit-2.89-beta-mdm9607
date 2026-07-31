@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         # Definisikan target arsitektur dan kompiler silang
-        target: [arm-linux-gnueabi, aarch64-linux-gnu] # Contoh target
+        target: [arm-linux-gnueabi] # Contoh target
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
