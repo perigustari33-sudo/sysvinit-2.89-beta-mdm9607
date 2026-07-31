@@ -127,7 +127,7 @@ utmpdump:	utmpdump.o
 runlevel:	LDLIBS += $(STATIC)
 runlevel:	runlevel.o
 
-sulogin:	LDLIBS += $(SULOGINLIBS) $(STATIC)
+sulogin:	LDLIBS += $(STATIC)
 sulogin:	sulogin.o consoles.o
 
 wall:		LDLIBS += $(STATIC)
