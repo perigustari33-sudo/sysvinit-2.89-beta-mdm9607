@@ -1345,7 +1345,7 @@ void check_kernel_console()
 					ch->action = RESPAWN;
 					strcpy(ch->id, id);
 					strcpy(ch->rlevel, "2345");
-					sprintf(ch->process, "/sbin/agetty -L -s 115200,38400,9600 %s vt102", dev);
+					sprintf(ch->process, "/sbin/getty -L -s 115200,38400,9600 %s vt102", dev);
 					ch->next = NULL;
 					for(old = family; old; old = old->next) {
 						if (strcmp(old->id, ch->id) == 0) {
