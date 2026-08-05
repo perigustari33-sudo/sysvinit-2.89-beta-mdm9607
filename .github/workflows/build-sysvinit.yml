@@ -13,10 +13,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install ARM cross-compilation tools
+    - name: Download and extract Linaro GCC
       run: |
-        sudo apt-get update
-        sudo apt-get install -y crossbuild-essential-armhf
+        wget https://archive.org/download/arm-linux-musleabihf-cross/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf.tar.xz
+        tar -xf gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf.tar.xz
+        echo "${{ github.workspace }}/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin" >> $GITHUB_PATH
 
     - name: Remove sulogin from Makefile
       run: |
@@ -47,13 +48,20 @@ jobs:
       run: |
         cd src
         make -e CC=arm-linux-gnueabihf-gcc \
-             CFLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=vfpv3" \
-             LDFLAGS="-static -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3"
+             CFLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=vfpv3 -static" \
+             LDFLAGS="-static -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3" \
+             STATIC=""
 
     - name: Strip binaries
       run: |
         cd src
         arm-linux-gnueabihf-strip init halt shutdown runlevel killall5 fstab-decode
+
+    - name: Verify binaries
+      run: |
+        cd src
+        file init halt shutdown runlevel killall5 fstab-decode
+        arm-linux-gnueabihf-readelf -A init | grep -E "Tag_CPU_arch|Tag_ABI_VFP_args|Tag_FP_arch"
 
     - name: Upload binaries as artifacts
       uses: actions/upload-artifact@v4
